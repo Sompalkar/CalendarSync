@@ -62,7 +62,7 @@ export class AuthController {
 
       const userId = (user._id as any).toString();
       const jwtToken = generateJWT(userId);
-      t;
+    
       res.cookie("jwt", jwtToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production", // true in production
