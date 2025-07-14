@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import { Request, Response } from "express";
 import { oauth2Client, SCOPES } from "../config/google";
 import User from "../models/User";
 import { generateJWT, getUserInfo } from "../services/authService";
