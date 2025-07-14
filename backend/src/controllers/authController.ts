@@ -29,15 +29,13 @@ export class AuthController {
         res.status(400).json({ error: "Authorization code required" });
         return;
       }
-
-      // Exchange code for tokens
+ 
       const { tokens } = await oauth2Client.getToken(code as string);
       oauth2Client.setCredentials(tokens);
-
-      // Get user info
+ 
       const userInfo = await getUserInfo(tokens.access_token!);
 
-      // Find or create user
+     
       let user = await User.findOne({ googleId: userInfo.id });
 
       if (!user) {
@@ -65,10 +63,9 @@ export class AuthController {
     
       res.cookie("jwt", jwtToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production", // true in production
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // none for cross-site cookies in prod
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        // domain: set only if you need cross-subdomain cookies, otherwise omit
+        secure: process.env.NODE_ENV === "production",  
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",   
+        maxAge: 7 * 24 * 60 * 60 * 1000, 
       });
       try {
         await setupWebhook(userId);

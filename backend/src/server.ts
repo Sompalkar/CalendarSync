@@ -16,10 +16,15 @@ const PORT = process.env.PORT || 3001;
 // Trust proxy for rate limiting
 app.set("trust proxy", 1);
 
-// Middleware
+const frontendUrl = process.env.FRONTEND_URL;
+if (!frontendUrl) {
+  console.warn(
+    "FRONTEND_URL environment variable is not set. CORS may fail in production."
+  );
+}
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: frontendUrl,
     credentials: true,
   })
 );
