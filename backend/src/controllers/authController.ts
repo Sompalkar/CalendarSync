@@ -60,29 +60,22 @@ export class AuthController {
 
       await user.save();
 
-      // Generate JWT
       const userId = (user._id as any).toString();
       const jwtToken = generateJWT(userId);
-
-      // Set cookie for persistent login on localhost
+      t;
       res.cookie("jwt", jwtToken, {
         httpOnly: true,
-        secure: false, // Not secure for localhost
-        sameSite: "lax", // Lax for localhost
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        domain: ".localhost", // Always .localhost for local dev
+        secure: process.env.NODE_ENV === "production", // true in production
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // none for cross-site cookies in prod
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        // domain: set only if you need cross-subdomain cookies, otherwise omit
       });
-      // NOTE: If persistent login does not work, check browser cookie settings for localhost and ensure cookies are not blocked.
-
-      // Setup webhook for real-time notifications
       try {
         await setupWebhook(userId);
       } catch (webhookError) {
         console.error("Webhook setup failed:", webhookError);
-        // Don't fail the auth flow if webhook setup fails
       }
 
-      // Redirect to frontend
       res.redirect(`${process.env.FRONTEND_URL}/calendar`);
     } catch (error) {
       console.error("Auth callback error:", error);
