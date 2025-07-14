@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,34 +17,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Bell, Lock, Palette, User, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useUserStore } from "@/store/user-store";
+import { useToast } from "@/components/ui/use-toast";
 
 export function SettingsPage() {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading, logout } = useUserStore();
+  const { toast } = useToast();
   const [googleLoading, setGoogleLoading] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetch("/api/auth/me", { credentials: "include" })
-      .then(async (res) => {
-        if (res.ok) {
-          setUser(await res.json());
-        } else {
-          setUser(null);
-        }
-        setLoading(false);
-      })
-      .catch(() => {
-        setUser(null);
-        setLoading(false);
-      });
-  }, []);
-
   const handleGoogleConnect = async () => {
     setGoogleLoading(true);
     setError("");
-    // Start Google OAuth flow for connect
     window.location.href = "/api/auth/google";
   };
 
@@ -52,17 +37,16 @@ export function SettingsPage() {
     setLogoutLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-      if (res.ok) {
-        window.location.href = "/";
-      } else {
-        setError("Logout failed");
-      }
+      await logout();
+      toast({ title: "Logged out", description: "You have been logged out." });
+      window.location.href = "/";
     } catch {
       setError("Logout failed");
+      toast({
+        title: "Logout failed",
+        description: "Could not log out.",
+        variant: "destructive",
+      });
     } finally {
       setLogoutLoading(false);
     }
@@ -126,10 +110,12 @@ export function SettingsPage() {
               <div className="flex items-center space-x-4">
                 <Avatar className="h-20 w-20">
                   <AvatarImage
-                    src="/placeholder.svg?height=80&width=80"
+                    src={user?.picture || "/placeholder.svg?height=80&width=80"}
                     alt="Profile"
                   />
-                  <AvatarFallback className="text-lg">JD</AvatarFallback>
+                  <AvatarFallback className="text-lg">
+                    {user?.name?.[0] || "U"}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="space-y-2">
                   <Button variant="outline" size="sm">
@@ -143,30 +129,18 @@ export function SettingsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" defaultValue="John" />
+                  <Label htmlFor="firstName">Name</Label>
+                  <Input id="firstName" value={user?.name || ""} readOnly />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" defaultValue="Doe" />
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={user?.email || ""}
+                    readOnly
+                  />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  defaultValue="john.doe@example.com"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="timezone">Timezone</Label>
-                <Input
-                  id="timezone"
-                  defaultValue="UTC-8 (Pacific Standard Time)"
-                />
               </div>
 
               <Button className="bg-blue-600 hover:bg-blue-700">

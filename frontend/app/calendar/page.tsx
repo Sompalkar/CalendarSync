@@ -1,34 +1,29 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarDashboard } from "@/components/calendar/calendar-dashboard";
+import { useUserStore } from "@/store/user-store";
 
 export default function CalendarPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState<null | boolean>(null);
+  const { user, loading, fetchUser } = useUserStore();
   const router = useRouter();
 
   useEffect(() => {
-    fetch("/api/auth/me", { credentials: "include" })
-      .then((res) => {
-        if (res.ok) {
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
-      })
-      .catch(() => {
-        setIsAuthenticated(false);
-      });
+    fetchUser();
+    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated === false) {
+    if (loading) return;
+    if (!user) {
       router.replace("/");
+    } else if (!user.isGoogleConnected) {
+      router.replace("/connect-google");
     }
-  }, [isAuthenticated, router]);
+    // eslint-disable-next-line
+  }, [user, loading]);
 
-  if (isAuthenticated === null) return null;
-  if (!isAuthenticated) return null;
+  if (loading || !user || !user.isGoogleConnected) return null;
 
   return <CalendarDashboard />;
 }

@@ -10,14 +10,17 @@ import {
 } from "@/components/ui/card";
 import { Calendar, Shield, Zap, Users } from "lucide-react";
 import { useState } from "react";
+import { useUserStore } from "@/store/user-store";
+import { useToast } from "@/components/ui/use-toast";
 
 export function LoginScreen() {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { login, register, loading, error } = useUserStore();
+  const { toast } = useToast();
+  const [localError, setLocalError] = useState("");
 
   const handleGoogleLogin = () => {
     window.location.href = "/api/auth/google";
@@ -25,30 +28,34 @@ export function LoginScreen() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      const endpoint =
-        mode === "login" ? "/api/auth/login" : "/api/auth/register";
-      const body =
-        mode === "login" ? { email, password } : { email, password, name };
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        credentials: "include",
-      });
-      if (res.ok) {
-        window.location.reload();
-      } else {
-        const data = await res.json();
-        setError(data.error || "Something went wrong");
+    setLocalError("");
+    let success = false;
+    if (mode === "login") {
+      success = await login(email, password);
+      if (!success) {
+        setLocalError("Login failed. Please check your credentials.");
+        toast({
+          title: "Login failed",
+          description: error || "Invalid credentials",
+          variant: "destructive",
+        });
       }
-    } catch (err) {
-      setError("Network error");
-    } finally {
-      setLoading(false);
+    } else {
+      if (!name.trim()) {
+        setLocalError("Name is required for registration.");
+        return;
+      }
+      success = await register(name, email, password);
+      if (!success) {
+        setLocalError("Registration failed. Please try again.");
+        toast({
+          title: "Registration failed",
+          description: error || "Could not register",
+          variant: "destructive",
+        });
+      }
     }
+    // On success, the zustand store will trigger a redirect via the page logic
   };
 
   return (
@@ -121,7 +128,11 @@ export function LoginScreen() {
                     className="w-full px-3 py-2 border rounded"
                     required
                   />
-                  {error && <div className="text-red-600 text-sm">{error}</div>}
+                  {(localError || error) && (
+                    <div className="text-red-600 text-sm">
+                      {localError || error}
+                    </div>
+                  )}
                   <Button
                     type="submit"
                     className="w-full h-12 text-base font-medium bg-blue-600 hover:bg-blue-700 transition-colors"

@@ -1,29 +1,32 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LoginScreen } from "@/components/auth/login-screen";
+import { useUserStore } from "@/store/user-store";
 
 export default function HomePage() {
-  const [isAuthenticated, setIsAuthenticated] = useState<null | boolean>(null);
+  const { user, loading, fetchUser } = useUserStore();
   const router = useRouter();
 
   useEffect(() => {
-    fetch("/api/auth/me", { credentials: "include" })
-      .then((res) => {
-        if (res.ok) {
-          setIsAuthenticated(true);
-          router.replace("/calendar");
-        } else {
-          setIsAuthenticated(false);
-        }
-      })
-      .catch(() => {
-        setIsAuthenticated(false);
-      });
-  }, [router]);
+    fetchUser();
+    // eslint-disable-next-line
+  }, []);
 
-  if (isAuthenticated === null) return null;
-  if (isAuthenticated) return null;
+  useEffect(() => {
+    if (loading) return;
+    if (user) {
+      if (user.isGoogleConnected) {
+        router.replace("/calendar");
+      } else {
+        router.replace("/connect-google");
+      }
+    }
+    // eslint-disable-next-line
+  }, [user, loading]);
+
+  if (loading) return null;
+  if (user) return null;
 
   return <LoginScreen />;
 }
