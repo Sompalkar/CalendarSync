@@ -1,19 +1,19 @@
-import mongoose, { type Document, Schema } from "mongoose"
+import mongoose, { type Document, Schema } from "mongoose";
 
 export interface IUser extends Document {
-  googleId: string
-  email: string
-  name: string
-  picture?: string
-  accessToken: string
-  refreshToken: string
-  tokenExpiry: Date
-  syncToken?: string
-  webhookChannelId?: string
-  webhookResourceId?: string
-  webhookExpiration?: Date
-  createdAt: Date
-  updatedAt: Date
+  googleId: string;
+  email: string;
+  name: string;
+  picture?: string;
+  accessToken: string;
+  refreshToken: string;
+  tokenExpiry: Date;
+  syncToken?: string;
+  webhookChannelId?: string;
+  webhookResourceId?: string;
+  webhookExpiration?: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const userSchema = new Schema<IUser>(
@@ -62,7 +62,7 @@ const userSchema = new Schema<IUser>(
   },
   {
     timestamps: true,
-  },
-)
+  }
+);
 
-export default mongoose.model<IUser>("User", userSchema)
+export default mongoose.model<IUser>("User", userSchema);

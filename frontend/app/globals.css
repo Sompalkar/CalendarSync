@@ -127,18 +127,6 @@
 
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-
-
-
-
-@layer base {
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
@@ -192,11 +180,28 @@
   body {
     @apply bg-background text-foreground;
   }
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+  #__next {
+    height: 100%;
+  }
 }
 
 /* FullCalendar custom styles */
 .fc {
   font-family: inherit;
+  height: 100% !important;
+}
+
+.fc-view-harness {
+  height: 100% !important;
+}
+
+.fc-scroller {
+  overflow-y: auto !important;
 }
 
 .fc-theme-standard td,
@@ -281,4 +286,14 @@
 .fc-day-today .fc-daygrid-day-number {
   color: #2563eb;
   font-weight: 600;
+}
+
+/* Fix calendar container height */
+.fc-daygrid-body,
+.fc-scrollgrid-sync-table {
+  height: 100% !important;
+}
+
+.fc-daygrid {
+  height: 100% !important;
 }

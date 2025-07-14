@@ -3,10 +3,11 @@ import type { AuthRequest } from "../middleware/auth"
 import { syncUserEvents, createEvent, updateEvent, deleteEvent, getUserEvents } from "../services/calendarService"
 
 export class CalendarController {
-  async getEvents(req: AuthRequest, res: Response) {
+  async getEvents(req: AuthRequest, res: Response): Promise<void> {
     try {
       if (!req.user) {
-        return res.status(401).json({ error: "Not authenticated" })
+        res.status(401).json({ error: "Not authenticated" })
+        return
       }
 
       const events = await getUserEvents(req.user)
@@ -34,10 +35,11 @@ export class CalendarController {
     }
   }
 
-  async createEvent(req: AuthRequest, res: Response) {
+  async createEvent(req: AuthRequest, res: Response): Promise<void> {
     try {
       if (!req.user) {
-        return res.status(401).json({ error: "Not authenticated" })
+        res.status(401).json({ error: "Not authenticated" })
+        return
       }
 
       const event = await createEvent(req.user, req.body)
@@ -57,10 +59,11 @@ export class CalendarController {
     }
   }
 
-  async updateEvent(req: AuthRequest, res: Response) {
+  async updateEvent(req: AuthRequest, res: Response): Promise<void> {
     try {
       if (!req.user) {
-        return res.status(401).json({ error: "Not authenticated" })
+        res.status(401).json({ error: "Not authenticated" })
+        return
       }
 
       const { eventId } = req.params
@@ -81,10 +84,11 @@ export class CalendarController {
     }
   }
 
-  async deleteEvent(req: AuthRequest, res: Response) {
+  async deleteEvent(req: AuthRequest, res: Response): Promise<void> {
     try {
       if (!req.user) {
-        return res.status(401).json({ error: "Not authenticated" })
+        res.status(401).json({ error: "Not authenticated" })
+        return
       }
 
       const { eventId } = req.params
@@ -97,10 +101,11 @@ export class CalendarController {
     }
   }
 
-  async syncEvents(req: AuthRequest, res: Response) {
+  async syncEvents(req: AuthRequest, res: Response): Promise<void> {
     try {
       if (!req.user) {
-        return res.status(401).json({ error: "Not authenticated" })
+        res.status(401).json({ error: "Not authenticated" })
+        return
       }
 
       const events = await syncUserEvents(req.user)

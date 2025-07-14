@@ -7,19 +7,21 @@ export interface AuthRequest extends Request {
   user?: IUser
 }
 
-export const authenticateToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authenticateToken = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const token = req.cookies.jwt
 
     if (!token) {
-      return res.status(401).json({ error: "Access token required" })
+      res.status(401).json({ error: "Access token required" })
+      return
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string }
     const user = await User.findById(decoded.userId)
 
     if (!user) {
-      return res.status(401).json({ error: "User not found" })
+      res.status(401).json({ error: "User not found" })
+      return
     }
 
     // Check if access token is expired
@@ -28,7 +30,8 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
         await refreshAccessToken(user)
       } catch (error) {
         console.error("Token refresh failed:", error)
-        return res.status(401).json({ error: "Token refresh failed" })
+        res.status(401).json({ error: "Token refresh failed" })
+        return
       }
     }
 
@@ -36,6 +39,6 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
     next()
   } catch (error) {
     console.error("Authentication error:", error)
-    return res.status(401).json({ error: "Invalid token" })
+    res.status(401).json({ error: "Invalid token" })
   }
 }

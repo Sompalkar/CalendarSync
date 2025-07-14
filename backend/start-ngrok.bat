@@ -1,0 +1,3 @@
+@echo off
+echo Starting ngrok tunnel for webhook...
+ngrok http 3001 --subdomain=calendar-sync-webhook 
