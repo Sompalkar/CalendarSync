@@ -4,20 +4,30 @@ import { handleWebhookNotification } from "../services/webhookService"
 export class WebhookController {
   async handleCalendarWebhook(req: Request, res: Response) {
     try {
-      const channelId = req.headers["x-goog-channel-id"] as string
-      const resourceId = req.headers["x-goog-resource-id"] as string
-      const resourceState = req.headers["x-goog-resource-state"] as string
+      const webhookData = req.webhookData
+
+      if (!webhookData) {
+        console.log("No webhook data found in request")
+        return res.status(400).send("Bad Request")
+      }
 
       console.log("Webhook received:", {
-        channelId,
-        resourceId,
-        resourceState,
-        headers: req.headers,
+        channelId: webhookData.channelId,
+        resourceId: webhookData.resourceId,
+        resourceState: webhookData.resourceState,
+        userId: webhookData.userId,
       })
 
       // Only process 'exists' state (when events change)
-      if (resourceState === "exists") {
-        await handleWebhookNotification(channelId, resourceId)
+      if (webhookData.resourceState === "exists") {
+        // Process webhook asynchronously to respond quickly
+        setImmediate(async () => {
+          try {
+            await handleWebhookNotification(webhookData.channelId, webhookData.resourceId)
+          } catch (error) {
+            console.error("Async webhook processing error:", error)
+          }
+        })
       }
 
       // Always respond with 200 to acknowledge receipt

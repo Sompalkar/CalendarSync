@@ -118,7 +118,7 @@ export function CalendarDashboard() {
     setIsEventModalOpen(true)
   }
 
-  const handleCreateEvent = () => {
+  const handleCreateEvent = ()  =>  {
     setSelectedDate(new Date().toISOString().split("T")[0])
     setSelectedEvent(null)
     setIsEventModalOpen(true)
