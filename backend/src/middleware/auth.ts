@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import { ParamsDictionary } from "express-serve-static-core";
 import { ParsedQs } from "qs";
 import jwt from "jsonwebtoken";
 import User, { type IUser } from "../models/User";
@@ -16,6 +15,8 @@ export interface AuthRequest<
   user?: IUser;
   cookies?: { [key: string]: string };
 }
+
+type ParamsDictionary = { [key: string]: string };
 
 export const authenticateToken = async (
   req: AuthRequest,

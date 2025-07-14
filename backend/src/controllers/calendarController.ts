@@ -7,7 +7,8 @@ import {
   deleteEvent,
   getUserEvents,
 } from "../services/calendarService";
-import { ParamsDictionary } from "express-serve-static-core";
+
+type ParamsDictionary = { [key: string]: string };
 
 export class CalendarController {
   async getEvents(req: AuthRequest, res: Response): Promise<void> {
@@ -43,7 +44,7 @@ export class CalendarController {
   }
 
   async createEvent(
-    req: AuthRequest<ParamsDictionary, any, any>,
+    req: AuthRequest<ParamsDictionary, any, any, any>,
     res: Response
   ): Promise<void> {
     try {
@@ -70,7 +71,7 @@ export class CalendarController {
   }
 
   async updateEvent(
-    req: AuthRequest<{ eventId: string }>,
+    req: AuthRequest<{ eventId: string }, any, any, any>,
     res: Response
   ): Promise<void> {
     try {
@@ -98,7 +99,7 @@ export class CalendarController {
   }
 
   async deleteEvent(
-    req: AuthRequest<{ eventId: string }>,
+    req: AuthRequest<{ eventId: string }, any, any, any>,
     res: Response
   ): Promise<void> {
     try {
@@ -117,7 +118,10 @@ export class CalendarController {
     }
   }
 
-  async syncEvents(req: AuthRequest, res: Response): Promise<void> {
+  async syncEvents(
+    req: AuthRequest<any, any, any, any>,
+    res: Response
+  ): Promise<void> {
     try {
       if (!req.user) {
         res.status(401).json({ error: "Not authenticated" });

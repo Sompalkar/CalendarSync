@@ -111,7 +111,10 @@ export class AuthController {
   }
 
   // 4. Persistent login: /api/auth/me
-  async getCurrentUser(req: AuthRequest, res: Response): Promise<void> {
+  async getCurrentUser(
+    req: AuthRequest<any, any, any, any>,
+    res: Response
+  ): Promise<void> {
     try {
       console.log(
         "[AUTH] Get current user",
@@ -210,7 +213,10 @@ export class AuthController {
   }
 
   // Google connect endpoint (for logged-in users)
-  async connectGoogle(req: AuthRequest, res: Response): Promise<void> {
+  async connectGoogle(
+    req: AuthRequest<any, any, any, any>,
+    res: Response
+  ): Promise<void> {
     try {
       if (!req.user) {
         res.status(401).json({ error: "Not authenticated" });
