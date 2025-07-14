@@ -1,7 +1,0 @@
-version: "2"
-authtoken: your-ngrok-auth-token
-tunnels:
-  webhook:
-    addr: 3001
-    proto: http
-    subdomain: calendar-sync-webhook
