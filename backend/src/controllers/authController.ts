@@ -4,6 +4,7 @@ import User from "../models/User";
 import { generateJWT, getUserInfo } from "../services/authService";
 import { setupWebhook } from "../services/webhookService";
 import type { AuthRequest } from "../middleware/auth";
+import bcrypt from "bcryptjs";
 
 export class AuthController {
   // 1. Initiate Google OAuth
@@ -115,6 +116,105 @@ export class AuthController {
     } catch (error) {
       console.error("Get current user error:", error);
       res.status(500).json({ error: "Failed to get user info" });
+    }
+  }
+
+  // Registration endpoint
+  async register(req: Request, res: Response): Promise<void> {
+    try {
+      const { email, password, name } = req.body;
+      if (!email || !password || !name) {
+        res
+          .status(400)
+          .json({ error: "Email, password, and name are required" });
+        return;
+      }
+      const existing = await User.findOne({ email });
+      if (existing) {
+        res.status(409).json({ error: "Email already registered" });
+        return;
+      }
+      const passwordHash = await bcrypt.hash(password, 10);
+      const user = new User({
+        email,
+        passwordHash,
+        name,
+        isGoogleConnected: false,
+      });
+      await user.save();
+      const jwtToken = generateJWT(user._id.toString());
+      res.cookie("jwt", jwtToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+      res.status(201).json({ message: "Registered successfully" });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ error: "Failed to register" });
+    }
+  }
+
+  // Login endpoint
+  async login(req: Request, res: Response): Promise<void> {
+    try {
+      const { email, password } = req.body;
+      if (!email || !password) {
+        res.status(400).json({ error: "Email and password are required" });
+        return;
+      }
+      const user = await User.findOne({ email });
+      if (!user || !user.passwordHash) {
+        res.status(401).json({ error: "Invalid credentials" });
+        return;
+      }
+      const valid = await bcrypt.compare(password, user.passwordHash);
+      if (!valid) {
+        res.status(401).json({ error: "Invalid credentials" });
+        return;
+      }
+      const jwtToken = generateJWT(user._id.toString());
+      res.cookie("jwt", jwtToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+      res.json({ message: "Logged in successfully" });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ error: "Failed to login" });
+    }
+  }
+
+  // Google connect endpoint (for logged-in users)
+  async connectGoogle(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      if (!req.user) {
+        res.status(401).json({ error: "Not authenticated" });
+        return;
+      }
+      const { code } = req.body;
+      if (!code) {
+        res.status(400).json({ error: "Authorization code required" });
+        return;
+      }
+      const { tokens } = await oauth2Client.getToken(code as string);
+      oauth2Client.setCredentials(tokens);
+      const userInfo = await getUserInfo(tokens.access_token!);
+      req.user.googleId = userInfo.id;
+      req.user.isGoogleConnected = true;
+      req.user.accessToken = tokens.access_token!;
+      req.user.refreshToken = tokens.refresh_token!;
+      req.user.tokenExpiry = new Date(tokens.expiry_date!);
+      req.user.name = userInfo.name!;
+      req.user.picture = userInfo.picture;
+      await req.user.save();
+      res.json({ message: "Google account connected" });
+    } catch (error) {
+      console.error("Google connect error:", error);
+      res.status(500).json({ error: "Failed to connect Google account" });
     }
   }
 }

@@ -1,17 +1,20 @@
-import express from "express"
-import { AuthController } from "../controllers/authController"
-import { authRateLimit } from "../middleware/rateLimiter"
-import { authenticateToken } from "../middleware/auth"
+import express from "express";
+import { AuthController } from "../controllers/authController";
+import { authRateLimit } from "../middleware/rateLimiter";
+import { authenticateToken } from "../middleware/auth";
 
-const router = express.Router()
-const authController = new AuthController()
+const router = express.Router();
+const authController = new AuthController();
 
 // Apply rate limiting to auth routes
-router.use(authRateLimit)
+router.use(authRateLimit);
 
-router.get("/google", authController.initiateGoogleAuth)
-router.get("/google/callback", authController.handleGoogleCallback)
-router.post("/logout", authController.logout)
-router.get("/me", authenticateToken, authController.getCurrentUser)
+router.get("/google", authController.initiateGoogleAuth);
+router.get("/google/callback", authController.handleGoogleCallback);
+router.post("/logout", authController.logout);
+router.post("/register", authController.register);
+router.post("/login", authController.login);
+router.post("/google/connect", authenticateToken, authController.connectGoogle);
+router.get("/me", authenticateToken, authController.getCurrentUser);
 
-export default router
+export default router;

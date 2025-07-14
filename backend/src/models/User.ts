@@ -1,13 +1,15 @@
 import mongoose, { type Document, Schema } from "mongoose";
 
 export interface IUser extends Document {
-  googleId: string;
   email: string;
+  passwordHash?: string; // for local users
   name: string;
   picture?: string;
-  accessToken: string;
-  refreshToken: string;
-  tokenExpiry: Date;
+  isGoogleConnected: boolean;
+  googleId?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  tokenExpiry?: Date;
   syncToken?: string;
   webhookChannelId?: string;
   webhookResourceId?: string;
@@ -18,15 +20,14 @@ export interface IUser extends Document {
 
 const userSchema = new Schema<IUser>(
   {
-    googleId: {
-      type: String,
-      required: true,
-      unique: true,
-    },
     email: {
       type: String,
       required: true,
       unique: true,
+    },
+    passwordHash: {
+      type: String,
+      required: false,
     },
     name: {
       type: String,
@@ -35,17 +36,26 @@ const userSchema = new Schema<IUser>(
     picture: {
       type: String,
     },
+    isGoogleConnected: {
+      type: Boolean,
+      default: false,
+    },
+    googleId: {
+      type: String,
+      required: false,
+      unique: false,
+    },
     accessToken: {
       type: String,
-      required: true,
+      required: false,
     },
     refreshToken: {
       type: String,
-      required: true,
+      required: false,
     },
     tokenExpiry: {
       type: Date,
-      required: true,
+      required: false,
     },
     syncToken: {
       type: String,

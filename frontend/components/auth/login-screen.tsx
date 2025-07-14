@@ -1,15 +1,55 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, Shield, Zap, Users } from "lucide-react"
-   
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Calendar, Shield, Zap, Users } from "lucide-react";
+import { useState } from "react";
 
 export function LoginScreen() {
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const handleGoogleLogin = () => {
-    // Redirect to backend OAuth endpoint
-    window.location.href = "/api/auth/google"
-  }
+    window.location.href = "/api/auth/google";
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const endpoint =
+        mode === "login" ? "/api/auth/login" : "/api/auth/register";
+      const body =
+        mode === "login" ? { email, password } : { email, password, name };
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        credentials: "include",
+      });
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        const data = await res.json();
+        setError(data.error || "Something went wrong");
+      }
+    } catch (err) {
+      setError("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -20,11 +60,12 @@ export function LoginScreen() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
               <Calendar className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-semibold text-gray-900">CalendarSync</span>
+            <span className="text-xl font-semibold text-gray-900">
+              CalendarSync
+            </span>
           </div>
         </div>
       </header>
-
       {/* Main Content */}
       <main className="container mx-auto px-4 py-16">
         <div className="mx-auto max-w-4xl">
@@ -37,20 +78,82 @@ export function LoginScreen() {
               </span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              Experience real-time calendar synchronization with Google Calendar. Manage your events seamlessly across
-              all devices with our modern interface.
+              Experience real-time calendar synchronization with Google
+              Calendar. Manage your events seamlessly across all devices with
+              our modern interface.
             </p>
-
             <Card className="max-w-md mx-auto border-0 shadow-xl bg-white/80 backdrop-blur-sm">
               <CardHeader className="text-center pb-4">
-                <CardTitle className="text-2xl">Get Started</CardTitle>
-                <CardDescription>Connect your Google Calendar to begin</CardDescription>
+                <CardTitle className="text-2xl">
+                  {mode === "login" ? "Login" : "Register"}
+                </CardTitle>
+                <CardDescription>
+                  {mode === "login"
+                    ? "Sign in with your email and password or connect Google."
+                    : "Create an account with your email and password."}
+                </CardDescription>
               </CardHeader>
               <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {mode === "register" && (
+                    <input
+                      type="text"
+                      placeholder="Name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full px-3 py-2 border rounded"
+                      required
+                    />
+                  )}
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-3 py-2 border rounded"
+                    required
+                  />
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-3 py-2 border rounded"
+                    required
+                  />
+                  {error && <div className="text-red-600 text-sm">{error}</div>}
+                  <Button
+                    type="submit"
+                    className="w-full h-12 text-base font-medium bg-blue-600 hover:bg-blue-700 transition-colors"
+                    size="lg"
+                    disabled={loading}
+                  >
+                    {loading
+                      ? "Loading..."
+                      : mode === "login"
+                      ? "Login"
+                      : "Register"}
+                  </Button>
+                </form>
+                <div className="flex justify-between mt-4">
+                  <button
+                    type="button"
+                    className="text-blue-600 hover:underline text-sm"
+                    onClick={() =>
+                      setMode(mode === "login" ? "register" : "login")
+                    }
+                  >
+                    {mode === "login"
+                      ? "Create an account"
+                      : "Already have an account? Login"}
+                  </button>
+                </div>
+                <div className="my-4 text-center text-gray-500 text-xs">or</div>
                 <Button
                   onClick={handleGoogleLogin}
-                  className="w-full h-12 text-base font-medium bg-blue-600 hover:bg-blue-700 transition-colors"
+                  className="w-full h-12 text-base font-medium bg-red-500 hover:bg-red-600 transition-colors"
                   size="lg"
+                  type="button"
                 >
                   <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                     <path
@@ -75,16 +178,18 @@ export function LoginScreen() {
               </CardContent>
             </Card>
           </div>
-
           {/* Features Grid */}
           <div className="grid md:grid-cols-3 gap-8 mb-16">
             <div className="text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 mx-auto mb-4">
                 <Zap className="h-6 w-6 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Real-time Sync</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Real-time Sync
+              </h3>
               <p className="text-gray-600">
-                Changes appear instantly across all your devices with our advanced synchronization
+                Changes appear instantly across all your devices with our
+                advanced synchronization
               </p>
             </div>
 
@@ -92,9 +197,12 @@ export function LoginScreen() {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 mx-auto mb-4">
                 <Shield className="h-6 w-6 text-green-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Secure & Private</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Secure & Private
+              </h3>
               <p className="text-gray-600">
-                Your calendar data is encrypted and secure with industry-standard protection
+                Your calendar data is encrypted and secure with
+                industry-standard protection
               </p>
             </div>
 
@@ -102,21 +210,28 @@ export function LoginScreen() {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 mx-auto mb-4">
                 <Users className="h-6 w-6 text-purple-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Team Collaboration</h3>
-              <p className="text-gray-600">Share and collaborate on events with your team members seamlessly</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Team Collaboration
+              </h3>
+              <p className="text-gray-600">
+                Share and collaborate on events with your team members
+                seamlessly
+              </p>
             </div>
           </div>
         </div>
       </main>
-
       {/* Footer */}
       <footer className="border-t border-gray-100 bg-white/80 backdrop-blur-sm mt-16">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-gray-600">
-            <p>&copy; 2024 CalendarSync. Built with Next.js and Google Calendar API.</p>
+            <p>
+              &copy; 2024 CalendarSync. Built with Next.js and Google Calendar
+              API.
+            </p>
           </div>
         </div>
       </footer>
     </div>
-  )
+  );
 }
