@@ -1,29 +1,30 @@
-"use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { CalendarDashboard } from "@/components/calendar/calendar-dashboard";
+"use client"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { CalendarDashboard } from "@/components/calendar/calendar-dashboard"
 
 export default function CalendarPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState<null | boolean>(null);
-  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState<null | boolean>(null)
+  const router = useRouter()
 
   useEffect(() => {
     fetch("/api/auth/me", { credentials: "include" })
       .then((res) => {
         if (res.ok) {
-          setIsAuthenticated(true);
+          setIsAuthenticated(true)
         } else {
-          setIsAuthenticated(false);
-          router.replace("/");
+          setIsAuthenticated(false)
+          router.replace("/")
         }
       })
       .catch(() => {
-        setIsAuthenticated(false);
-        router.replace("/");
-      });
-  }, [router]);
+        setIsAuthenticated(false)
+        router.replace("/")
+      })
+  }, [router])
 
-  if (isAuthenticated === null) return null; // or a loading spinner
-  if (!isAuthenticated) return null;
-  return <CalendarDashboard />;
+  if (isAuthenticated === null) return null
+  if (!isAuthenticated) return null
+
+  return <CalendarDashboard />
 }
