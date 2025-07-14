@@ -1,5 +1,7 @@
-import type { Response, Request } from "express";
-import type { AuthRequest } from "../middleware/auth";
+import { Response } from "express";
+import { AuthRequest } from "../middleware/auth";
+import { IUser } from "../models/User";
+import { IEvent } from "../models/Event";
 import {
   syncUserEvents,
   createEvent,
@@ -8,10 +10,23 @@ import {
   getUserEvents,
 } from "../services/calendarService";
 
-type ParamsDictionary = { [key: string]: string };
+interface EventResponse {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  description?: string;
+  location?: string;
+  status: "confirmed" | "tentative" | "cancelled";
+  extendedProps?: {
+    description?: string;
+    location?: string;
+    attendees?: string[];
+  };
+}
 
 export class CalendarController {
-  async getEvents(req: AuthRequest, res: Response): Promise<void> {
+  async getEvents(req: AuthRequest<{}, any, any, any>, res: Response): Promise<void> {
     try {
       if (!req.user) {
         res.status(401).json({ error: "Not authenticated" });
@@ -21,7 +36,7 @@ export class CalendarController {
       const events = await getUserEvents(req.user);
 
       // Format events for frontend
-      const formattedEvents = events.map((event) => ({
+      const formattedEvents: EventResponse[] = events.map((event: IEvent) => ({
         id: event.googleEventId,
         title: event.title,
         start: event.start.toISOString(),
@@ -44,7 +59,7 @@ export class CalendarController {
   }
 
   async createEvent(
-    req: AuthRequest<ParamsDictionary, any, any, any>,
+    req: AuthRequest<{}, any, { title: string; start: Date; end: Date; description?: string; location?: string; attendees?: string[] }, any>,
     res: Response
   ): Promise<void> {
     try {
@@ -71,7 +86,7 @@ export class CalendarController {
   }
 
   async updateEvent(
-    req: AuthRequest<{ eventId: string }, any, any, any>,
+    req: AuthRequest<{ eventId: string }, any, { title?: string; start?: Date; end?: Date; description?: string; location?: string; attendees?: string[] }, any>,
     res: Response
   ): Promise<void> {
     try {
@@ -118,10 +133,7 @@ export class CalendarController {
     }
   }
 
-  async syncEvents(
-    req: AuthRequest<any, any, any, any>,
-    res: Response
-  ): Promise<void> {
+  async syncEvents(req: AuthRequest<{}, any, any, any>, res: Response): Promise<void> {
     try {
       if (!req.user) {
         res.status(401).json({ error: "Not authenticated" });
@@ -130,7 +142,7 @@ export class CalendarController {
 
       const events = await syncUserEvents(req.user);
 
-      const formattedEvents = events.map((event) => ({
+      const formattedEvents: EventResponse[] = events.map((event: IEvent) => ({
         id: event.googleEventId,
         title: event.title,
         start: event.start.toISOString(),

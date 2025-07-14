@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { oauth2Client, SCOPES } from "../config/google";
-import User from "../models/User";
+import User, { IUser } from "../models/User";
 import { generateJWT, getUserInfo } from "../services/authService";
 import { setupWebhook } from "../services/webhookService";
-import type { AuthRequest } from "../middleware/auth";
+import { AuthRequest } from "../middleware/auth";
 import bcrypt from "bcryptjs";
 
 export class AuthController {
@@ -24,14 +24,9 @@ export class AuthController {
   }
 
   // 2. Handle Google OAuth callback, set cookie, redirect to frontend
-  async handleGoogleCallback(req: Request, res: Response): Promise<void> {
+  async handleGoogleCallback(req: Request<{}, any, any, { code?: string }>, res: Response): Promise<void> {
     try {
-      console.log(
-        "[AUTH] Google OAuth callback",
-        req.method,
-        req.url,
-        req.query
-      );
+      console.log("[AUTH] Google OAuth callback", req.method, req.url, req.query);
       const { code } = req.query;
       if (!code) {
         res.status(400).json({ error: "Authorization code required" });
@@ -63,7 +58,7 @@ export class AuthController {
         console.log("[AUTH] Updated Google user", userInfo.email);
       }
       await user.save();
-      const userId = (user._id as any).toString();
+      const userId = user._id.toString();
       const jwtToken = generateJWT(userId);
       // Set cookie with best practices
       res.cookie("jwt", jwtToken, {
@@ -111,17 +106,9 @@ export class AuthController {
   }
 
   // 4. Persistent login: /api/auth/me
-  async getCurrentUser(
-    req: AuthRequest<any, any, any, any>,
-    res: Response
-  ): Promise<void> {
+  async getCurrentUser(req: AuthRequest<{}, any, any, any>, res: Response): Promise<void> {
     try {
-      console.log(
-        "[AUTH] Get current user",
-        req.method,
-        req.url,
-        req.user?._id
-      );
+      console.log("[AUTH] Get current user", req.method, req.url, req.user?._id);
       if (!req.user) {
         res.status(401).json({ error: "Not authenticated" });
         return;
@@ -140,14 +127,12 @@ export class AuthController {
   }
 
   // Registration endpoint
-  async register(req: Request, res: Response): Promise<void> {
+  async register(req: Request<{}, any, { email: string; password: string; name: string }>, res: Response): Promise<void> {
     try {
       console.log("[AUTH] Register request", req.method, req.url, req.body);
       const { email, password, name } = req.body;
       if (!email || !password || !name) {
-        res
-          .status(400)
-          .json({ error: "Email, password, and name are required" });
+        res.status(400).json({ error: "Email, password, and name are required" });
         return;
       }
       const existing = await User.findOne({ email });
@@ -179,7 +164,7 @@ export class AuthController {
   }
 
   // Login endpoint
-  async login(req: Request, res: Response): Promise<void> {
+  async login(req: Request<{}, any, { email: string; password: string }>, res: Response): Promise<void> {
     try {
       console.log("[AUTH] Login request", req.method, req.url, req.body);
       const { email, password } = req.body;
@@ -204,7 +189,7 @@ export class AuthController {
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
-      console.log("[AUTH] Login successful", email);
+      console.log("[AUTH] Login successful");
       res.json({ message: "Logged in successfully" });
     } catch (error) {
       console.error("Login error:", error);
@@ -213,10 +198,7 @@ export class AuthController {
   }
 
   // Google connect endpoint (for logged-in users)
-  async connectGoogle(
-    req: AuthRequest<any, any, any, any>,
-    res: Response
-  ): Promise<void> {
+  async connectGoogle(req: AuthRequest<{}, any, { code: string }, any>, res: Response): Promise<void> {
     try {
       if (!req.user) {
         res.status(401).json({ error: "Not authenticated" });
