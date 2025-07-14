@@ -5,9 +5,6 @@ import { refreshAccessToken } from "../services/authService";
 
 export interface AuthRequest extends Request {
   user?: IUser;
-  cookies: { [key: string]: string };
-  body: any;
-  params: any;
 }
 
 export const authenticateToken = async (
