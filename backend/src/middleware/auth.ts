@@ -1,10 +1,20 @@
 import { Request, Response, NextFunction } from "express";
+import { ParamsDictionary } from "express-serve-static-core";
+import { ParsedQs } from "qs";
 import jwt from "jsonwebtoken";
 import User, { type IUser } from "../models/User";
 import { refreshAccessToken } from "../services/authService";
 
-export interface AuthRequest extends Request {
+// AuthRequest extends all standard Express Request properties (method, url, body, params, cookies, etc.)
+// and adds an optional user property for authenticated routes.
+export interface AuthRequest<
+  P = ParamsDictionary,
+  ResBody = any,
+  ReqBody = any,
+  ReqQuery = ParsedQs
+> extends Request<P, ResBody, ReqBody, ReqQuery> {
   user?: IUser;
+  cookies?: { [key: string]: string };
 }
 
 export const authenticateToken = async (
