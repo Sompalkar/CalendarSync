@@ -10,6 +10,7 @@ export class AuthController {
   // 1. Initiate Google OAuth
   async initiateGoogleAuth(req: Request, res: Response): Promise<void> {
     try {
+      console.log("[AUTH] Initiate Google OAuth request", req.method, req.url);
       const authUrl = oauth2Client.generateAuthUrl({
         access_type: "offline",
         scope: SCOPES,
@@ -25,6 +26,12 @@ export class AuthController {
   // 2. Handle Google OAuth callback, set cookie, redirect to frontend
   async handleGoogleCallback(req: Request, res: Response): Promise<void> {
     try {
+      console.log(
+        "[AUTH] Google OAuth callback",
+        req.method,
+        req.url,
+        req.query
+      );
       const { code } = req.query;
       if (!code) {
         res.status(400).json({ error: "Authorization code required" });
@@ -47,11 +54,13 @@ export class AuthController {
           refreshToken: tokens.refresh_token!,
           tokenExpiry: new Date(tokens.expiry_date!),
         });
+        console.log("[AUTH] Created new Google user", userInfo.email);
       } else {
         user.accessToken = tokens.access_token!;
         user.refreshToken = tokens.refresh_token!;
         user.tokenExpiry = new Date(tokens.expiry_date!);
         user.name = userInfo.name!;
+        console.log("[AUTH] Updated Google user", userInfo.email);
       }
       await user.save();
       const userId = (user._id as any).toString();
@@ -80,14 +89,15 @@ export class AuthController {
         </html>
       `);
     } catch (error) {
-      console.error("Auth callback error:", error);
-      res.redirect(`${process.env.FRONTEND_URL}?error=auth_failed`);
+      console.error("Google callback error:", error);
+      res.status(500).json({ error: "Failed to handle Google callback" });
     }
   }
 
   // 3. Logout: clear cookie
   async logout(req: Request, res: Response): Promise<void> {
     try {
+      console.log("[AUTH] Logout request", req.method, req.url);
       res.clearCookie("jwt", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -103,6 +113,12 @@ export class AuthController {
   // 4. Persistent login: /api/auth/me
   async getCurrentUser(req: AuthRequest, res: Response): Promise<void> {
     try {
+      console.log(
+        "[AUTH] Get current user",
+        req.method,
+        req.url,
+        req.user?._id
+      );
       if (!req.user) {
         res.status(401).json({ error: "Not authenticated" });
         return;
@@ -112,6 +128,7 @@ export class AuthController {
         name: req.user.name,
         email: req.user.email,
         picture: req.user.picture,
+        isGoogleConnected: req.user.isGoogleConnected,
       });
     } catch (error) {
       console.error("Get current user error:", error);
@@ -122,6 +139,7 @@ export class AuthController {
   // Registration endpoint
   async register(req: Request, res: Response): Promise<void> {
     try {
+      console.log("[AUTH] Register request", req.method, req.url, req.body);
       const { email, password, name } = req.body;
       if (!email || !password || !name) {
         res
@@ -149,6 +167,7 @@ export class AuthController {
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
+      console.log("[AUTH] Registered new user", email);
       res.status(201).json({ message: "Registered successfully" });
     } catch (error) {
       console.error("Registration error:", error);
@@ -159,6 +178,7 @@ export class AuthController {
   // Login endpoint
   async login(req: Request, res: Response): Promise<void> {
     try {
+      console.log("[AUTH] Login request", req.method, req.url, req.body);
       const { email, password } = req.body;
       if (!email || !password) {
         res.status(400).json({ error: "Email and password are required" });
@@ -181,6 +201,7 @@ export class AuthController {
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
+      console.log("[AUTH] Login successful", email);
       res.json({ message: "Logged in successfully" });
     } catch (error) {
       console.error("Login error:", error);
@@ -211,6 +232,7 @@ export class AuthController {
       req.user.name = userInfo.name!;
       req.user.picture = userInfo.picture;
       await req.user.save();
+      console.log("[AUTH] Google account connected for user", req.user.email);
       res.json({ message: "Google account connected" });
     } catch (error) {
       console.error("Google connect error:", error);
