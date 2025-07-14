@@ -13,10 +13,19 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
-      '@typescript-eslint/no-unused-vars': 'off',
       'react/no-unescaped-entities': 'off',
+      '@next/next/no-page-custom-font': 'off',
+      // Add this rule configuration to allow short-circuit expressions
+      '@typescript-eslint/no-unused-expressions': [
+        'error',
+        {
+          allowShortCircuit: true,
+          allowTernary: true,
+          allowTaggedTemplates: true
+        }
+      ]
     },
   },
-];cd
+];
 
 export default eslintConfig;

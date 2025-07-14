@@ -1,123 +1,136 @@
-"use client"
-import { useState, useEffect, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { CalendarHeader } from "./calendar-header"
-import { CalendarView } from "./calendar-view"
-import { EventModal } from "./event-modal"
-import { Sidebar } from "./sidebar"
-import { SyncStatus } from "./sync-status"
-import { ErrorBoundary } from "./error-boundary"
-import { useCalendarStore } from "@/store/calendar-store"
-import { Menu, X } from "lucide-react"
+"use client";
+import { useState, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { CalendarHeader } from "./calendar-header";
+import { CalendarView } from "./calendar-view";
+import { EventModal } from "./event-modal";
+import { Sidebar } from "./sidebar";
+import { SyncStatus } from "./sync-status";
+import { ErrorBoundary } from "./error-boundary";
+import { useCalendarStore } from "@/store/calendar-store";
+import { Menu, X } from "lucide-react";
+import type { Event } from "@/store/calendar-store";
 
 export function CalendarDashboard() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [isEventModalOpen, setIsEventModalOpen] = useState(false)
-  const [selectedDate, setSelectedDate] = useState<string | null>(null)
-  const [selectedEvent, setSelectedEvent] = useState<any>(null)
-  const [isUserActive, setIsUserActive] = useState(true)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isUserActive, setIsUserActive] = useState(true);
 
-  const { events, fetchEvents, isLoading, setOnlineStatus, pollInterval, error, resetError } = useCalendarStore()
+  const {
+    events,
+    fetchEvents,
+    isLoading,
+    setOnlineStatus,
+    pollInterval,
+    error,
+    resetError,
+  } = useCalendarStore();
 
   // Track user activity for smart polling
   const handleUserActivity = useCallback(() => {
-    setIsUserActive(true)
-  }, [])
+    setIsUserActive(true);
+  }, []);
 
   useEffect(() => {
     // Track online/offline status
-    const handleOnline = () => setOnlineStatus(true)
-    const handleOffline = () => setOnlineStatus(false)
+    const handleOnline = () => setOnlineStatus(true);
+    const handleOffline = () => setOnlineStatus(false);
 
     // Track user activity
-    const activityEvents = ["mousedown", "mousemove", "keypress", "scroll", "touchstart"]
+    const activityEvents = [
+      "mousedown",
+      "mousemove",
+      "keypress",
+      "scroll",
+      "touchstart",
+    ];
 
-    window.addEventListener("online", handleOnline)
-    window.addEventListener("offline", handleOffline)
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
     activityEvents.forEach((event) => {
-      document.addEventListener(event, handleUserActivity, true)
-    })
+      document.addEventListener(event, handleUserActivity, true);
+    });
 
     return () => {
-      window.removeEventListener("online", handleOnline)
-      window.removeEventListener("offline", handleOffline)
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
       activityEvents.forEach((event) => {
-        document.removeEventListener(event, handleUserActivity, true)
-      })
-    }
-  }, [setOnlineStatus, handleUserActivity])
+        document.removeEventListener(event, handleUserActivity, true);
+      });
+    };
+  }, [setOnlineStatus, handleUserActivity]);
 
   // Smart polling based on visibility and activity
   useEffect(() => {
-    let intervalRef: NodeJS.Timeout | null = null
-    let activityTimeout: NodeJS.Timeout
+    let intervalRef: NodeJS.Timeout | null = null;
+    let activityTimeout: NodeJS.Timeout;
 
     const getPollingInterval = () => {
-      if (document.visibilityState === "hidden") return 60000
-      if (!isUserActive) return 30000
-      return pollInterval
-    }
+      if (document.visibilityState === "hidden") return 60000;
+      if (!isUserActive) return 30000;
+      return pollInterval;
+    };
 
     const poll = () => {
-      fetchEvents()
-      intervalRef && clearInterval(intervalRef)
+      fetchEvents();
+      // @typescript-eslint/no-unused-expressions
+      intervalRef && clearInterval(intervalRef);
       intervalRef = setInterval(() => {
         if (document.visibilityState === "visible" && isUserActive) {
-          fetchEvents()
+          fetchEvents();
         }
-      }, getPollingInterval())
-    }
+      }, getPollingInterval());
+    };
 
-    poll()
+    poll();
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        fetchEvents()
-        setIsUserActive(true)
+        fetchEvents();
+        setIsUserActive(true);
       }
-      poll()
-    }
+      poll();
+    };
 
     const resetActivityTimeout = () => {
-      clearTimeout(activityTimeout)
-      activityTimeout = setTimeout(
-        () => {
-          setIsUserActive(false)
-        },
-        5 * 60 * 1000,
-      )
-    }
+      clearTimeout(activityTimeout);
+      activityTimeout = setTimeout(() => {
+        setIsUserActive(false);
+      }, 5 * 60 * 1000);
+    };
 
-    document.addEventListener("visibilitychange", handleVisibilityChange)
-    document.addEventListener("mousedown", resetActivityTimeout)
-    document.addEventListener("keypress", resetActivityTimeout)
-
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("mousedown", resetActivityTimeout);
+    document.addEventListener("keypress", resetActivityTimeout);
+    // @typescript-eslint/no-unused-expressions
     return () => {
-      intervalRef && clearInterval(intervalRef)
-      clearTimeout(activityTimeout)
-      document.removeEventListener("visibilitychange", handleVisibilityChange)
-      document.removeEventListener("mousedown", resetActivityTimeout)
-      document.removeEventListener("keypress", resetActivityTimeout)
-    }
-  }, [fetchEvents, pollInterval, isUserActive])
+      intervalRef && clearInterval(intervalRef);
+      clearTimeout(activityTimeout);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("mousedown", resetActivityTimeout);
+      document.removeEventListener("keypress", resetActivityTimeout);
+    };
+  }, [fetchEvents, pollInterval, isUserActive]);
 
   const handleDateClick = (date: string) => {
-    setSelectedDate(date)
-    setSelectedEvent(null)
-    setIsEventModalOpen(true)
-  }
+    setSelectedDate(date);
+    setSelectedEvent(null);
+    setIsEventModalOpen(true);
+  };
 
-  const handleEventClick = (event: any) => {
-    setSelectedEvent(event)
-    setSelectedDate(null)
-    setIsEventModalOpen(true)
-  }
+  const handleEventClick = (event: Event) => {
+    setSelectedEvent(event);
+    setSelectedDate(null);
+    setIsEventModalOpen(true);
+  };
 
   const handleCreateEvent = () => {
-    setSelectedDate(new Date().toISOString().split("T")[0])
-    setSelectedEvent(null)
-    setIsEventModalOpen(true)
-  }
+    setSelectedDate(new Date().toISOString().split("T")[0]);
+    setSelectedEvent(null);
+    setIsEventModalOpen(true);
+  };
 
   return (
     <ErrorBoundary>
@@ -142,9 +155,16 @@ export function CalendarDashboard() {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-900">
                   <span className="text-white font-semibold text-sm">CS</span>
                 </div>
-                <span className="text-lg font-semibold text-neutral-900">CalendarSync</span>
+                <span className="text-lg font-semibold text-neutral-900">
+                  CalendarSync
+                </span>
               </div>
-              <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8" onClick={() => setIsSidebarOpen(false)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden h-8 w-8"
+                onClick={() => setIsSidebarOpen(false)}
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -156,7 +176,12 @@ export function CalendarDashboard() {
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Header */}
           <div className="flex h-16 items-center justify-between border-b bg-white px-4 lg:px-6 flex-shrink-0">
-            <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8" onClick={() => setIsSidebarOpen(true)}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden h-8 w-8"
+              onClick={() => setIsSidebarOpen(true)}
+            >
               <Menu className="h-4 w-4" />
             </Button>
             <CalendarHeader onCreateEvent={handleCreateEvent} />
@@ -187,7 +212,7 @@ export function CalendarDashboard() {
         />
 
         {/* Error Toast */}
-        {error && (
+        {error ? (
           <div className="fixed bottom-4 right-4 z-50 max-w-sm">
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg">
               <div className="flex items-start space-x-3">
@@ -206,8 +231,8 @@ export function CalendarDashboard() {
               </div>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </ErrorBoundary>
-  )
+  );
 }

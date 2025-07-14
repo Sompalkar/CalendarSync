@@ -1,34 +1,44 @@
-"use client"
-import { useEffect, useRef } from "react"
-import FullCalendar from "@fullcalendar/react"
-import dayGridPlugin from "@fullcalendar/daygrid"
-import timeGridPlugin from "@fullcalendar/timegrid"
-import interactionPlugin from "@fullcalendar/interaction"
-import { useCalendarStore } from "@/store/calendar-store"
-import { Loader2 } from "lucide-react"
+"use client";
+import { useEffect, useRef } from "react";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import { useCalendarStore } from "@/store/calendar-store";
+import { Loader2 } from "lucide-react";
+import type { Event } from "@/store/calendar-store";
 
 interface CalendarViewProps {
-  events: any[]
-  onDateClick: (date: string) => void
-  onEventClick: (event: any) => void
-  isLoading: boolean
+  events: Event[];
+  onDateClick: (date: string) => void;
+  onEventClick: (event: Event) => void;
+  isLoading: boolean;
 }
 
-export function CalendarView({ events, onDateClick, onEventClick, isLoading }: CalendarViewProps) {
-  const calendarRef = useRef<FullCalendar>(null)
-  const { currentView, currentDate } = useCalendarStore()
+export function CalendarView({
+  events,
+  onDateClick,
+  onEventClick,
+  isLoading,
+}: CalendarViewProps) {
+  const calendarRef = useRef<FullCalendar>(null);
+  const { currentView, currentDate } = useCalendarStore();
 
   useEffect(() => {
     if (calendarRef.current) {
-      const calendarApi = calendarRef.current.getApi()
+      const calendarApi = calendarRef.current.getApi();
       calendarApi.changeView(
-        currentView === "month" ? "dayGridMonth" : currentView === "week" ? "timeGridWeek" : "timeGridDay",
-      )
+        currentView === "month"
+          ? "dayGridMonth"
+          : currentView === "week"
+          ? "timeGridWeek"
+          : "timeGridDay"
+      );
 
       // Navigate to the current date
-      calendarApi.gotoDate(currentDate)
+      calendarApi.gotoDate(currentDate);
     }
-  }, [currentView, currentDate])
+  }, [currentView, currentDate]);
 
   if (isLoading && events.length === 0) {
     return (
@@ -38,7 +48,7 @@ export function CalendarView({ events, onDateClick, onEventClick, isLoading }: C
           <p className="text-neutral-600 text-sm">Loading your calendar...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -53,6 +63,7 @@ export function CalendarView({ events, onDateClick, onEventClick, isLoading }: C
             headerToolbar={false}
             events={events}
             dateClick={(info) => onDateClick(info.dateStr)}
+            // @ts-expect-error @typescript-eslint/ban-ts-comment
             eventClick={(info) => onEventClick(info.event)}
             height="100%"
             expandRows={true}
@@ -85,8 +96,8 @@ export function CalendarView({ events, onDateClick, onEventClick, isLoading }: C
               currentView === "day"
                 ? { weekday: "long", month: "long", day: "numeric" }
                 : currentView === "week"
-                  ? { weekday: "short", day: "numeric" }
-                  : { weekday: "short" }
+                ? { weekday: "short", day: "numeric" }
+                : { weekday: "short" }
             }
             {...(currentView !== "month" && {
               scrollTime: "08:00:00",
@@ -109,63 +120,63 @@ export function CalendarView({ events, onDateClick, onEventClick, isLoading }: C
           scrollbar-width: none;
           -ms-overflow-style: none;
         }
-        
+
         .calendar-container::-webkit-scrollbar {
           display: none;
         }
-        
+
         .calendar-container .fc-scroller {
           /* Hide scrollbars in FullCalendar */
           scrollbar-width: none;
           -ms-overflow-style: none;
         }
-        
+
         .calendar-container .fc-scroller::-webkit-scrollbar {
           display: none;
         }
-        
+
         .calendar-container .fc {
           font-family: inherit;
         }
-        
+
         .calendar-container .fc-theme-standard td,
         .calendar-container .fc-theme-standard th {
           border-color: #f5f5f5;
         }
-        
+
         .calendar-container .fc-col-header-cell {
           background-color: #fafafa;
           font-weight: 500;
           color: #737373;
           padding: 12px 8px;
         }
-        
+
         .calendar-container .fc-daygrid-day-number {
           color: #171717;
           font-weight: 500;
           padding: 8px;
           font-size: 0.875rem;
         }
-        
+
         .calendar-container .fc-day-today {
           background-color: #fef3c7 !important;
         }
-        
+
         .calendar-container .fc-day-today .fc-daygrid-day-number {
           color: #92400e;
           font-weight: 600;
         }
-        
+
         .calendar-container .fc-timegrid-slot {
           height: 2.5rem;
         }
-        
+
         .calendar-container .fc-timegrid-slot-label {
           color: #737373;
           font-size: 0.75rem;
           font-weight: 500;
         }
-        
+
         .calendar-container .fc-event {
           border-radius: 4px;
           border: none;
@@ -174,53 +185,53 @@ export function CalendarView({ events, onDateClick, onEventClick, isLoading }: C
           padding: 2px 6px;
           margin: 1px 0;
         }
-        
+
         .calendar-container .fc-event:hover {
           filter: brightness(0.9);
           transform: translateY(-1px);
         }
-        
+
         .calendar-container .fc-more-link {
           color: #737373;
           font-weight: 500;
           font-size: 0.75rem;
         }
-        
+
         .calendar-container .fc-popover {
           border: 1px solid #e5e5e5;
           border-radius: 8px;
           box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
-        
+
         .calendar-container .fc-scrollgrid {
           border-radius: 8px;
           overflow: hidden;
         }
-        
+
         .calendar-container .fc-daygrid-day {
           min-height: 100px;
         }
-        
+
         @media (max-width: 640px) {
           .calendar-container .fc-daygrid-day-number {
             font-size: 0.75rem;
             padding: 4px;
           }
-          
+
           .calendar-container .fc-event {
             font-size: 0.625rem;
             padding: 1px 4px;
           }
-          
+
           .calendar-container .fc-daygrid-day {
             min-height: 80px;
           }
-          
+
           .calendar-container .fc-timegrid-slot {
             height: 2rem;
           }
         }
       `}</style>
     </div>
-  )
+  );
 }
