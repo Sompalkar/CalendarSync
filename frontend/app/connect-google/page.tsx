@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,7 @@ import { useUserStore } from "@/store/user-store";
 export default function ConnectGooglePage() {
   const { user, loading, fetchUser } = useUserStore();
   const router = useRouter();
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetchUser();
@@ -24,10 +25,20 @@ export default function ConnectGooglePage() {
   useEffect(() => {
     if (loading) return;
     if (!user) {
-      router.replace("/");
-    } else if (user.isGoogleConnected) {
-      router.replace("/calendar");
+      router.replace("/login");
+      return;
     }
+    if (user.isGoogleConnected) {
+      router.replace("/calendar");
+      return;
+    }
+    // Poll for Google connection every 2 seconds
+    pollingRef.current = setInterval(async () => {
+      await fetchUser();
+    }, 2000);
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
     // eslint-disable-next-line
   }, [user, loading]);
 

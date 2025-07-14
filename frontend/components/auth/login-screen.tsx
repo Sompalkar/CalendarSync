@@ -9,12 +9,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Calendar, Shield, Zap, Users } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { useUserStore } from "@/store/user-store";
 import { useToast } from "@/components/ui/use-toast";
 
-export function LoginScreen() {
-  const [mode, setMode] = useState<"login" | "register">("login");
+export function LoginScreen({ mode = "login" }: { mode?: "login" | "register" }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -34,11 +34,7 @@ export function LoginScreen() {
       success = await login(email, password);
       if (!success) {
         setLocalError("Login failed. Please check your credentials.");
-        toast({
-          title: "Login failed",
-          description: error || "Invalid credentials",
-          variant: "destructive",
-        });
+        toast({ title: "Login failed", description: error || "Invalid credentials", variant: "destructive" });
       }
     } else {
       if (!name.trim()) {
@@ -48,11 +44,7 @@ export function LoginScreen() {
       success = await register(name, email, password);
       if (!success) {
         setLocalError("Registration failed. Please try again.");
-        toast({
-          title: "Registration failed",
-          description: error || "Could not register",
-          variant: "destructive",
-        });
+        toast({ title: "Registration failed", description: error || "Could not register", variant: "destructive" });
       }
     }
     // On success, the zustand store will trigger a redirect via the page logic
@@ -79,15 +71,12 @@ export function LoginScreen() {
           {/* Hero Section */}
           <div className="text-center mb-16">
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              Your Calendar,{" "}
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Synchronized
-              </span>
+              {mode === "login" ? "Welcome Back!" : "Create Your Account"}
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              Experience real-time calendar synchronization with Google
-              Calendar. Manage your events seamlessly across all devices with
-              our modern interface.
+              {mode === "login"
+                ? "Sign in to access your calendar."
+                : "Register to start syncing your Google Calendar."}
             </p>
             <Card className="max-w-md mx-auto border-0 shadow-xl bg-white/80 backdrop-blur-sm">
               <CardHeader className="text-center pb-4">
@@ -128,11 +117,7 @@ export function LoginScreen() {
                     className="w-full px-3 py-2 border rounded"
                     required
                   />
-                  {(localError || error) && (
-                    <div className="text-red-600 text-sm">
-                      {localError || error}
-                    </div>
-                  )}
+                  {(localError || error) && <div className="text-red-600 text-sm">{localError || error}</div>}
                   <Button
                     type="submit"
                     className="w-full h-12 text-base font-medium bg-blue-600 hover:bg-blue-700 transition-colors"
@@ -147,17 +132,15 @@ export function LoginScreen() {
                   </Button>
                 </form>
                 <div className="flex justify-between mt-4">
-                  <button
-                    type="button"
-                    className="text-blue-600 hover:underline text-sm"
-                    onClick={() =>
-                      setMode(mode === "login" ? "register" : "login")
-                    }
-                  >
-                    {mode === "login"
-                      ? "Create an account"
-                      : "Already have an account? Login"}
-                  </button>
+                  {mode === "login" ? (
+                    <Link href="/register" className="text-blue-600 hover:underline text-sm">
+                      Create an account
+                    </Link>
+                  ) : (
+                    <Link href="/login" className="text-blue-600 hover:underline text-sm">
+                      Already have an account? Login
+                    </Link>
+                  )}
                 </div>
                 <div className="my-4 text-center text-gray-500 text-xs">or</div>
                 <Button
